@@ -14,38 +14,68 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         // ==========================================
-        //  CONFIG 1: ใส่ค่า Firebase Config ที่นี่
+        //  ENVIRONMENT VARIABLES
         // ==========================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyDQBM66YRLXmtFx7lynCBrL2qty9HNd57o",
-            authDomain: "loinby-cfdfe.firebaseapp.com",
-            projectId: "loinby-cfdfe",
-            storageBucket: "loinby-cfdfe.firebasestorage.app",
-            messagingSenderId: "605737719385",
-            appId: "1:605737719385:web:5a08679d76f7bb23cdc348"
+        const ENV = {
+            FIREBASE_CONFIG: {
+                apiKey: "AIzaSyDQBM66YRLXmtFx7lynCBrL2qty9HNd57o",
+                authDomain: "loinby-cfdfe.firebaseapp.com",
+                projectId: "loinby-cfdfe",
+                storageBucket: "loinby-cfdfe.firebasestorage.app",
+                messagingSenderId: "605737719385",
+                appId: "1:605737719385:web:5a08679d76f7bb23cdc348"
+            },
+            API_URL: "https://script.google.com/macros/s/AKfycbxvwe9U49mrbwwWXOdNBlTbxQ_RMhwl0Fg3uEeu60vU-04LoI7JLgW2iQDWt5MSgv33/exec",
+            EXAM_SETTINGS: {
+                ENABLE_POSTTEST: false,    
+                ENABLE_SHOW_ANSWER: true,  
+                ENABLE_RETAKE: true        
+            }
         };
 
-        const appme = initializeApp(firebaseConfig);
+        const appme = initializeApp(ENV.FIREBASE_CONFIG);
         const auth = getAuth(appme);
         const provider = new GoogleAuthProvider();
 
+        // --- Global Auth Functions ---
         window.loginWithGoogle = () => {
             signInWithPopup(auth, provider)
                 .catch((error) => {
                     console.error("Login Error:", error);
-                    alert("เกิดข้อผิดพลาดในการล็อกอิน: " + error.message);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เข้าสู่ระบบไม่สำเร็จ',
+                        text: error.message,
+                        confirmButtonColor: '#0369a1'
+                    });
                 });
         };
 
         window.logoutFirebase = () => {
-            signOut(auth).then(() => {
-                location.reload();
+            Swal.fire({
+                title: 'ออกจากระบบ?',
+                text: "คุณต้องการลงชื่อออกใช่หรือไม่",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#0369a1',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'ใช่, ออกจากระบบ',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    signOut(auth).then(() => {
+                        location.reload();
+                    });
+                }
             });
         };
 
@@ -61,8 +91,6 @@
                 currentState.user = name; 
                 currentState.userId = email;
                 currentState.photoURL = user.photoURL;
-                
-                // Default info
                 currentState.realName = name; 
                 currentState.studentId = '';
 
@@ -87,6 +115,8 @@
                 renderApp();
             }
         });
+
+        window.APP_ENV = ENV;
     </script>
 
     <script>
@@ -95,16 +125,9 @@
                 extend: {
                     colors: {
                         nursing: {
-                            50: '#f0f9ff',  // Very Light Blue
-                            100: '#e0f2fe',
-                            200: '#bae6fd',
-                            300: '#7dd3fc',
-                            400: '#38bdf8',
-                            500: '#0ea5e9', // Sky Blue
-                            600: '#0284c7', // Primary Blue
-                            700: '#0369a1', // Navy
-                            800: '#075985', // Dark Navy
-                            900: '#0c4a6e', // Deep Navy
+                            50: '#f0f9ff', 100: '#e0f2fe', 200: '#bae6fd', 300: '#7dd3fc',
+                            400: '#38bdf8', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1',
+                            800: '#075985', 900: '#0c4a6e',
                         }
                     },
                     fontFamily: {
@@ -119,35 +142,22 @@
         body {
             font-family: 'Sarabun', sans-serif;
             background-color: #f8fafc;
-            /* Subtle grid pattern */
             background-image: linear-gradient(#e2e8f0 1px, transparent 1px), linear-gradient(90deg, #e2e8f0 1px, transparent 1px);
             background-size: 40px 40px;
         }
         .fade-in { animation: fadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .nursing-shadow { 
-            box-shadow: 0 4px 6px -1px rgba(12, 74, 110, 0.1), 0 2px 4px -1px rgba(12, 74, 110, 0.06); 
-        }
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(226, 232, 240, 0.8);
-        }
-        
+        .nursing-shadow { box-shadow: 0 4px 6px -1px rgba(12, 74, 110, 0.1), 0 2px 4px -1px rgba(12, 74, 110, 0.06); }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(226, 232, 240, 0.8); }
         .loader {
-            width: 48px;
-            height: 48px;
-            border: 5px solid #e0f2fe;
-            border-bottom-color: #0369a1;
-            border-radius: 50%;
-            display: inline-block;
-            box-sizing: border-box;
-            animation: rotation 1s linear infinite;
+            width: 48px; height: 48px; border: 5px solid #e0f2fe; border-bottom-color: #0369a1;
+            border-radius: 50%; display: inline-block; box-sizing: border-box; animation: rotation 1s linear infinite;
         }
-        @keyframes rotation {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* SweetAlert Font Override */
+        div:where(.swal2-container) {
+            font-family: 'Sarabun', sans-serif !important;
         }
     </style>
 </head>
@@ -156,15 +166,6 @@
     <div id="app" class="min-h-screen flex flex-col items-center justify-center p-4"></div>
 
     <script>
-        // ==========================================
-        //  CONFIG 2: ใส่ URL ของ Google Apps Script ที่นี่
-        // ==========================================
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbxvwe9U49mrbwwWXOdNBlTbxQ_RMhwl0Fg3uEeu60vU-04LoI7JLgW2iQDWt5MSgv33/exec"; 
-        
-        const ENABLE_POSTTEST = false;
-        const ENABLE_SHOW_ANSWER = true;
-        const ENABLE_RETAKE = true;
-
         const app = document.getElementById('app');
         
         let currentState = {
@@ -173,27 +174,25 @@
             currentQuestionIndex: 0, 
             answers: {}, 
             score: 0, 
-            
-            realName: '',
-            studentId: '',
-
+            realName: '', studentId: '',
             currentExamData: [],
             pretestQuestions: null,
             posttestQuestions: null,
-
             pretestData: { isDone: false, score: 0, answers: {} },
             posttestData: { isDone: false, score: 0, answers: {} },
-            
             isLoading: false
         };
 
         // --- API Functions ---
+        function getApiUrl() { return window.APP_ENV ? window.APP_ENV.API_URL : ""; }
+        function getExamSettings() { return window.APP_ENV ? window.APP_ENV.EXAM_SETTINGS : { ENABLE_POSTTEST: false, ENABLE_SHOW_ANSWER: true, ENABLE_RETAKE: true }; }
+
         async function checkUserStatus(email) {
-            if (!GAS_URL) return null;
+            const url = getApiUrl();
+            if (!url) return null;
             try {
-                const response = await fetch(`${GAS_URL}?action=check&username=${encodeURIComponent(email)}`);
-                const data = await response.json();
-                return data;
+                const response = await fetch(`${url}?action=check&username=${encodeURIComponent(email)}`);
+                return await response.json();
             } catch (error) {
                 console.error("Error checking user:", error);
                 return null;
@@ -201,20 +200,26 @@
         }
 
         async function fetchQuestions(type) {
-            if (!GAS_URL) return [];
+            const url = getApiUrl();
+            if (!url) return [];
             try {
-                const response = await fetch(`${GAS_URL}?action=getQuestions&quizType=${type}`);
-                const data = await response.json();
-                return data;
+                const response = await fetch(`${url}?action=getQuestions&quizType=${type}`);
+                return await response.json();
             } catch (error) {
                 console.error("Error fetching questions:", error);
-                alert("ไม่สามารถดึงข้อสอบได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ข้อผิดพลาด',
+                    text: 'ไม่สามารถเชื่อมต่อเพื่อดึงข้อสอบได้',
+                    confirmButtonColor: '#0369a1'
+                });
                 return [];
             }
         }
 
         async function saveUserData(payload) {
-            if (!GAS_URL) return;
+            const url = getApiUrl();
+            if (!url) return;
             const formData = new FormData();
             formData.append('action', 'send');
             formData.append('username', payload.userId);
@@ -226,7 +231,7 @@
             formData.append('answers', JSON.stringify(payload.answers));
 
             try {
-                const response = await fetch(GAS_URL, { method: 'POST', body: formData });
+                const response = await fetch(url, { method: 'POST', body: formData });
                 return await response.json();
             } catch (error) {
                 console.error("Error saving:", error);
@@ -250,7 +255,7 @@
                 <div class="glass-panel rounded-2xl nursing-shadow p-10 w-full max-w-md fade-in border-t-8 border-nursing-700">
                     <div class="text-center mb-8">
                         <div class="flex justify-center mb-6">
-                            <img src="https://www.kcn.ac.th/storage/app/uploads/public/5f7/29a/4b4/5f729a4b49225046305979.jpg" 
+                            <img src="https://www.kcn.ac.th/storage/app/media/images/logo/logo_kcn.png" 
                                  alt="KCN Logo" 
                                  class="h-28 object-contain drop-shadow-md hover:scale-105 transition-transform duration-300">
                         </div>
@@ -270,7 +275,7 @@
                     </div>
                 </div>
             `;
-            lucide.createIcons();
+            if(window.lucide) lucide.createIcons();
         }
 
         function renderRegister() {
@@ -308,7 +313,12 @@
                 currentState.studentId = document.getElementById('studentIdInput').value.trim();
                 
                 if(!currentState.realName || !currentState.studentId) {
-                    alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'ข้อมูลไม่ครบถ้วน',
+                        text: 'กรุณากรอกชื่อและรหัสนักศึกษาให้ครบถ้วน',
+                        confirmButtonColor: '#0369a1'
+                    });
                     return;
                 }
                 currentState.view = 'menu';
@@ -317,6 +327,7 @@
         }
 
         function renderMenu() {
+            const SETTINGS = getExamSettings();
             const profileImg = currentState.photoURL 
                 ? `<img src="${currentState.photoURL}" class="w-20 h-20 rounded-full mx-auto mb-4 border-4 border-white shadow-md object-cover">`
                 : `<div class="bg-white/20 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm border-2 border-white/50 shadow-lg"><i data-lucide="user" class="w-10 h-10 text-white"></i></div>`;
@@ -327,10 +338,10 @@
             
             if (pre.isDone) {
                 let btns = '';
-                if (ENABLE_SHOW_ANSWER) {
+                if (SETTINGS.ENABLE_SHOW_ANSWER) {
                     btns += `<button onclick="reviewQuiz('pretest')" class="text-xs bg-white border border-slate-200 text-nursing-700 px-3 py-2 rounded shadow-sm hover:bg-slate-50 flex items-center gap-1 transition"><i data-lucide="eye" class="w-3 h-3"></i> ดูเฉลย</button>`;
                 }
-                if (ENABLE_RETAKE) {
+                if (SETTINGS.ENABLE_RETAKE) {
                     btns += `<button onclick="startQuiz('pretest')" class="text-xs bg-nursing-50 text-nursing-700 border border-nursing-200 px-3 py-2 rounded shadow-sm hover:bg-nursing-100 flex items-center gap-1 transition"><i data-lucide="rotate-ccw" class="w-3 h-3"></i> สอบแก้ตัว</button>`;
                 }
 
@@ -373,7 +384,7 @@
             let posttestHtml = '';
             const post = currentState.posttestData;
 
-            if (!ENABLE_POSTTEST) {
+            if (!SETTINGS.ENABLE_POSTTEST) {
                 posttestHtml = `
                     <div class="bg-slate-50 border border-slate-200 rounded-lg p-5 text-left opacity-70 relative">
                         <div class="flex justify-between items-center">
@@ -386,7 +397,7 @@
             } else {
                 if (post.isDone) {
                     let btns = '';
-                    if (ENABLE_SHOW_ANSWER) {
+                    if (SETTINGS.ENABLE_SHOW_ANSWER) {
                         btns += `<button onclick="reviewQuiz('posttest')" class="text-xs bg-white border border-slate-200 text-nursing-700 px-3 py-2 rounded shadow-sm hover:bg-slate-50 flex items-center gap-1 transition"><i data-lucide="eye" class="w-3 h-3"></i> ดูเฉลย</button>`;
                     }
 
@@ -478,14 +489,12 @@
                 const isSelected = currentAnswer === idx;
                 const isCorrect = idx === question.correctAnswer;
                 
-                // Styles logic
                 let containerClass = "border-slate-200 bg-white hover:border-nursing-300 hover:bg-slate-50";
                 let circleClass = "border-slate-300 text-transparent";
                 let icon = "";
 
                 if (isReviewMode) {
-                    containerClass = "cursor-default border-slate-200 bg-white opacity-60"; // Default dimmed
-                    
+                    containerClass = "cursor-default border-slate-200 bg-white opacity-60"; 
                     if (isSelected) {
                         if (isCorrect) {
                             containerClass = "border-green-500 bg-green-50 opacity-100 ring-1 ring-green-500";
@@ -502,7 +511,6 @@
                         icon = `<i data-lucide="check" class="w-5 h-5 text-green-600 ml-2"></i>`;
                     }
                 } else {
-                    // Normal Mode
                     if (isSelected) {
                         containerClass = "border-nursing-600 bg-nursing-50 ring-1 ring-nursing-600 text-nursing-900 font-medium shadow-sm";
                         circleClass = "border-nursing-600 bg-nursing-600 text-white";
@@ -523,7 +531,6 @@
 
             app.innerHTML = `
                 <div class="w-full max-w-3xl flex flex-col min-h-screen sm:min-h-0 sm:h-auto fade-in">
-                    <!-- Header Bar -->
                     <div class="flex justify-between items-center mb-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
                         <h2 class="text-lg font-bold text-nursing-800 flex items-center gap-2">
                             <i data-lucide="clipboard-list" class="w-5 h-5 text-nursing-600"></i>
@@ -533,13 +540,9 @@
                             ข้อที่ ${currentState.currentQuestionIndex + 1} / ${questions.length}
                         </span>
                     </div>
-
-                    <!-- Progress Bar -->
                     <div class="w-full bg-slate-200 rounded-full h-2.5 mb-6">
                         <div class="bg-nursing-600 h-2.5 rounded-full transition-all duration-300" style="width: ${progress}%"></div>
                     </div>
-
-                    <!-- Question Card -->
                     <div class="bg-white rounded-2xl nursing-shadow p-6 md:p-8 mb-6 flex-grow border border-slate-100 relative overflow-hidden">
                          <div class="absolute -top-6 -right-6 opacity-5 rotate-12">
                             <i data-lucide="stethoscope" class="w-40 h-40 text-nursing-900"></i>
@@ -549,8 +552,6 @@
                         </h3>
                         <div class="space-y-3 relative z-10">${optionsHtml}</div>
                     </div>
-
-                    <!-- Controls -->
                     <div class="flex justify-between items-center mt-auto pt-2 pb-8 sm:pb-0">
                          ${isReviewMode ? `
                              <button onclick="backToMenu()" 
@@ -643,7 +644,12 @@
             }
 
             if(questions.length === 0) {
-                alert('ไม่พบข้อสอบในระบบ หรือชีตยังว่างอยู่');
+                Swal.fire({
+                    icon: 'info',
+                    title: 'ไม่พบข้อสอบ',
+                    text: 'ยังไม่มีข้อสอบในระบบ หรือเกิดข้อผิดพลาดในการโหลด',
+                    confirmButtonColor: '#0369a1'
+                });
                 renderMenu();
                 return;
             }
@@ -674,7 +680,12 @@
             currentState.currentExamData = type === 'pretest' ? currentState.pretestQuestions : currentState.posttestQuestions;
             
             if(!currentState.currentExamData || currentState.currentExamData.length === 0) {
-                alert('ไม่พบข้อมูลข้อสอบ');
+                Swal.fire({
+                    icon: 'info',
+                    title: 'ไม่พบข้อมูล',
+                    text: 'ไม่สามารถโหลดข้อมูลเพื่อดูเฉลยได้',
+                    confirmButtonColor: '#0369a1'
+                });
                 renderMenu();
                 return;
             }
@@ -696,7 +707,19 @@
         window.backToMenu = () => { currentState.view = 'menu'; renderApp(); };
         
         window.submitQuiz = async () => {
-            if(!confirm('ยืนยันการส่งคำตอบ?')) return;
+            const result = await Swal.fire({
+                title: 'ยืนยันการส่งคำตอบ?',
+                text: "กรุณาตรวจสอบความเรียบร้อยก่อนส่ง",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0369a1',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'ยืนยันส่งคำตอบ',
+                cancelButtonText: 'กลับไปตรวจสอบ'
+            });
+
+            if (!result.isConfirmed) return;
+
             const questions = currentState.currentExamData;
             let score = 0;
             questions.forEach((q, idx) => { if(currentState.answers[idx] === q.correctAnswer) score++; });
