@@ -63,9 +63,9 @@
         window.loginWithGoogle = () => {
             // [TEST MODE] บังคับให้ถามสิทธิ์ (Consent) และเลือกบัญชีใหม่ทุกครั้ง
             // ลบบรรทัดนี้ออกเมื่อทดสอบเสร็จ หากต้องการให้จำสิทธิ์เดิม
-            provider.setCustomParameters({
-                prompt: 'select_account consent'
-            });
+            // provider.setCustomParameters({
+            //     prompt: 'select_account consent'
+            // });
 
             // การเรียก signInWithPopup จะใช้ค่า Persistence ที่ตั้งไว้ข้างบน
             signInWithPopup(auth, provider)
